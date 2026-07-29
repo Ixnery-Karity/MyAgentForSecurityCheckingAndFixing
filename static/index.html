@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="内网靶机安全检查 Agent 工作流控制台">
+  <title>SentinelFlow · Security Agent Console</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="ambient" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="#main" aria-label="SentinelFlow 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 3 4.5 6v5.5c0 4.7 3.2 8.1 7.5 9.5 4.3-1.4 7.5-4.8 7.5-9.5V6L12 3Z"/><path d="m9 12 2 2 4-5"/></svg>
+      </span>
+      <span><strong>SentinelFlow</strong><small>Security Agent Console</small></span>
+    </a>
+    <div class="system-status" role="status">
+      <span class="status-dot"></span>
+      <span id="systemStatus">正在连接 Agent</span>
+      <span id="modelBadge" class="model-badge">—</span>
+    </div>
+  </header>
+
+  <main id="main" class="shell">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">AUTONOMOUS SOC WORKFLOW</p>
+        <h1>从告警到处置，<span>一条链路完成。</span></h1>
+        <p class="hero-copy">聚合日志分析、L1 分诊、IOC 调查、靶机扫描与漏洞关联，由 Manager Agent 输出可追踪的安全结论。</p>
+      </div>
+      <div class="hero-metric">
+        <span>工作流状态</span>
+        <strong id="heroState">待命</strong>
+        <small>规则引擎始终可用，LLM 自动降级</small>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <form id="agentForm" class="panel input-panel">
+        <div class="panel-heading">
+          <div><span class="kicker">01 / INPUT</span><h2>检查任务</h2></div>
+          <button type="button" id="loadSample" class="ghost-button">载入靶机样例</button>
+        </div>
+
+        <label for="targetIp">目标 IP</label>
+        <input id="targetIp" name="targetIp" value="192.168.3.73" required inputmode="decimal" autocomplete="off">
+
+        <label for="alertJson">告警 JSON</label>
+        <textarea id="alertJson" name="alertJson" rows="10" spellcheck="false"></textarea>
+
+        <label for="logLine">Web 访问日志</label>
+        <textarea id="logLine" name="logLine" rows="4" spellcheck="false"></textarea>
+
+        <div class="options">
+          <label class="switch-row"><input id="useLlm" type="checkbox" checked><span>启用 LLM 增强研判</span></label>
+          <label class="switch-row"><input id="externalLookup" type="checkbox"><span>允许公网 IP 归属查询</span></label>
+        </div>
+
+        <button id="runButton" class="primary-button" type="submit">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 3 14 9-14 9V3Z"/></svg>
+          <span>启动安全工作流</span>
+        </button>
+        <p id="formError" class="form-error" role="alert"></p>
+      </form>
+
+      <section class="panel flow-panel" aria-labelledby="flowTitle">
+        <div class="panel-heading">
+          <div><span class="kicker">02 / ORCHESTRATION</span><h2 id="flowTitle">Agent 工作流</h2></div>
+          <span id="workflowId" class="workflow-id">NO ACTIVE RUN</span>
+        </div>
+        <ol id="workflow" class="workflow-list">
+          <li data-stage="ingest"><span class="step-index">01</span><div><strong>事件接入</strong><small>规范化告警与日志</small></div><span class="step-state">等待</span></li>
+          <li data-stage="analysis"><span class="step-index">02</span><div><strong>日志分析 Agent</strong><small>识别 Web 攻击特征</small></div><span class="step-state">等待</span></li>
+          <li data-stage="triage"><span class="step-index">03</span><div><strong>SOC 分诊 Agent</strong><small>提取 IOC 与处置建议</small></div><span class="step-state">等待</span></li>
+          <li data-stage="investigation"><span class="step-index">04</span><div><strong>调查工具 Agent</strong><small>IP 富化与载荷解码</small></div><span class="step-state">等待</span></li>
+          <li data-stage="assessment"><span class="step-index">05</span><div><strong>资产评估 Agent</strong><small>安全模拟扫描与 CVE 关联</small></div><span class="step-state">等待</span></li>
+          <li data-stage="report"><span class="step-index">06</span><div><strong>Manager Agent</strong><small>汇总风险与最终报告</small></div><span class="step-state">等待</span></li>
+        </ol>
+      </section>
+    </section>
+
+    <section id="results" class="results" aria-live="polite">
+      <article class="metric-card"><span>综合风险</span><strong id="riskScore">—</strong><small id="severityText">尚未运行</small></article>
+      <article class="metric-card"><span>发现 IOC</span><strong id="iocCount">—</strong><small>有效网络指标</small></article>
+      <article class="metric-card"><span>开放服务</span><strong id="serviceCount">—</strong><small>安全模拟扫描</small></article>
+      <article class="metric-card"><span>漏洞关联</span><strong id="vulnCount">—</strong><small>本地知识库匹配</small></article>
+
+      <article class="panel report-card">
+        <div class="panel-heading"><div><span class="kicker">03 / REPORT</span><h2>研判摘要</h2></div><span id="actionBadge" class="action-badge">等待执行</span></div>
+        <p id="summaryText" class="summary-text">提交任务后，这里将显示 Manager Agent 的最终安全结论。</p>
+        <div id="findingGrid" class="finding-grid"></div>
+      </article>
+
+      <article class="panel console-card">
+        <div class="panel-heading"><div><span class="kicker">04 / TRACE</span><h2>执行轨迹</h2></div><button id="copyReport" class="icon-button" type="button" aria-label="复制 JSON 报告" title="复制 JSON 报告"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg></button></div>
+        <pre id="traceOutput">$ agent ready
+$ waiting for security task...</pre>
+      </article>
+    </section>
+  </main>
+
+  <footer>SentinelFlow · 仅用于已授权的内网靶场与安全研究</footer>
+  <script src="/app.js" defer></script>
+</body>
+</html>
