@@ -94,6 +94,9 @@ input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 0
 input { min-height: 46px; padding: 0 13px; }
 textarea { resize: vertical; padding: 13px; line-height: 1.55; }
 input:focus, textarea:focus, button:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.field-hint { min-height: 20px; margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+.field-hint.valid { color: var(--accent-bright); }
+.field-hint.invalid { color: #fca5a5; }
 
 .options { display: grid; gap: 8px; margin: 18px 0; }
 .switch-row { display: flex; align-items: center; gap: 10px; margin: 0; min-height: 34px; color: var(--muted); font-weight: 500; cursor: pointer; }

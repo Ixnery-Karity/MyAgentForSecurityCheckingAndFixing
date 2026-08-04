@@ -38,17 +38,17 @@ class AgentRequestHandler(BaseHTTPRequestHandler):
             return
         try:
             body = self._read_json()
-            target_ip = str(body.get("target_ip") or "192.168.3.73").strip()
+            target = str(body.get("target") or body.get("target_ip") or "192.168.3.73").strip()
             alert = body.get("alert") or {}
             if not isinstance(alert, dict):
                 raise ValueError("alert 必须是 JSON 对象")
             alert.setdefault("alert_id", "LAB-WEB-001")
             alert.setdefault("type", "Suspicious Web Request")
-            alert.setdefault("source_ip", target_ip)
+            alert.setdefault("target", target)
             result = SecurityWorkflow().run(
                 alert=alert,
                 log_line=str(body.get("log_line") or ""),
-                target_ip=target_ip,
+                target=target,
                 allow_external_lookup=bool(body.get("allow_external_lookup", False)),
                 use_llm=bool(body.get("use_llm", True)),
             )

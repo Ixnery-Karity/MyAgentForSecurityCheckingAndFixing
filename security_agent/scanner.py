@@ -23,20 +23,25 @@ KNOWN_VULNERABILITIES = {
 }
 
 
-def scan_lab_target(ip: str) -> dict[str, Any]:
-    address = ipaddress.ip_address(ip)
-    if not address.is_private:
+def scan_lab_target(target: str, resolved_ips: list[str] | None = None) -> dict[str, Any]:
+    resolved_ips = list(resolved_ips or [])
+    candidates = [target, *resolved_ips]
+    lab_ip = next((candidate for candidate in candidates if candidate in LAB_ASSETS), None)
+    if not lab_ip:
         return {
-            "target": ip,
+            "target": target,
             "mode": "safe-simulation",
+            "resolved_ips": resolved_ips,
             "services": [],
-            "note": "安全模式仅对预置内网靶机资产返回模拟扫描结果",
+            "note": "安全模式仅对预置内网靶机资产返回模拟扫描结果，未执行真实网络扫描",
         }
     return {
-        "target": ip,
+        "target": target,
         "mode": "safe-simulation",
-        "services": LAB_ASSETS.get(ip, []),
-        "note": "未执行真实网络扫描",
+        "resolved_ips": resolved_ips,
+        "matched_lab_ip": lab_ip,
+        "services": LAB_ASSETS[lab_ip],
+        "note": "已匹配预置内网靶机资产，未执行真实网络扫描",
     }
 
 

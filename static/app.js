@@ -1,5 +1,5 @@
 const sample = {
-  targetIp: "192.168.3.73",
+  target: "192.168.3.73",
   alert: {
     alert_id: "LAB-WAF-001",
     type: "SQL Injection Attempt",
@@ -13,7 +13,8 @@ const sample = {
 
 const elements = {
   form: document.querySelector("#agentForm"),
-  targetIp: document.querySelector("#targetIp"),
+  targetInput: document.querySelector("#targetInput"),
+  targetHint: document.querySelector("#targetHint"),
   alertJson: document.querySelector("#alertJson"),
   logLine: document.querySelector("#logLine"),
   useLlm: document.querySelector("#useLlm"),
@@ -42,7 +43,7 @@ const elements = {
 let latestReport = null;
 
 function loadSample() {
-  elements.targetIp.value = sample.targetIp;
+  elements.targetInput.value = sample.target;
   elements.alertJson.value = JSON.stringify(sample.alert, null, 2);
   elements.logLine.value = sample.log;
 }
@@ -67,6 +68,27 @@ function resetWorkflow() {
   });
 }
 
+function validateTarget() {
+  const value = elements.targetInput.value.trim();
+  if (!value) {
+    elements.targetHint.textContent = "请输入 IPv4、域名或 http(s) URL。";
+    elements.targetHint.className = "field-hint invalid";
+    return false;
+  }
+  try {
+    const candidate = /^[a-z][a-z\d+.-]*:\/\//i.test(value) ? value : `https://${value}`;
+    const parsed = new URL(candidate);
+    if (!parsed.hostname || !["http:", "https:"].includes(parsed.protocol)) throw new Error();
+    elements.targetHint.textContent = `目标主机：${parsed.hostname}${parsed.pathname !== "/" ? ` · 路径：${parsed.pathname}` : ""}`;
+    elements.targetHint.className = "field-hint valid";
+    return true;
+  } catch {
+    elements.targetHint.textContent = "目标格式无效，请输入 IPv4、域名或 http(s) URL。";
+    elements.targetHint.className = "field-hint invalid";
+    return false;
+  }
+}
+
 function setStage(stage, status) {
   const step = elements.workflowSteps.find((item) => item.dataset.stage === stage);
   if (!step) return;
@@ -77,7 +99,7 @@ function setStage(stage, status) {
 
 function animatePendingStages() {
   resetWorkflow();
-  const stages = ["ingest", "analysis", "triage", "investigation", "assessment", "report"];
+  const stages = ["ingest", "target", "analysis", "triage", "investigation", "assessment", "report"];
   let index = 0;
   setStage(stages[index], "running");
   return window.setInterval(() => {
@@ -103,7 +125,12 @@ function renderReport(report) {
   const decoded = report.investigation?.payload_decoding?.decoded || "未解码出有效载荷";
   const services = report.scan?.services?.map((item) => `${item.port}/${item.service} ${item.version}`).join(" · ") || "未发现预置服务";
   const vulnerabilities = report.vulnerabilities?.map((item) => item.cve).join(", ") || "未匹配已知漏洞";
+  const target = report.target || {};
+  const resolvedIps = target.resolved_ips?.join(", ") || "未解析到 IP";
   elements.findingGrid.innerHTML = [
+    ["TARGET TYPE", `${target.kind || "unknown"} / ${target.host_kind || "unknown"}`],
+    ["TARGET HOST", target.hostname || "未解析"],
+    ["RESOLVED IPS", resolvedIps],
     ["ATTACK SIGNAL", report.log_analysis?.attack_type || report.triage?.severity || "Unknown"],
     ["DECODED PAYLOAD", decoded],
     ["EXPOSED SERVICES", services],
@@ -144,7 +171,7 @@ elements.form.addEventListener("submit", async (event) => {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
-        target_ip: elements.targetIp.value.trim(),
+        target: elements.targetInput.value.trim(),
         alert,
         log_line: elements.logLine.value.trim(),
         use_llm: elements.useLlm.checked,
@@ -167,6 +194,10 @@ elements.form.addEventListener("submit", async (event) => {
 });
 
 elements.loadSample.addEventListener("click", loadSample);
+elements.targetInput.addEventListener("blur", validateTarget);
+elements.targetInput.addEventListener("input", () => {
+  if (elements.targetHint.classList.contains("invalid")) validateTarget();
+});
 elements.copyReport.addEventListener("click", async () => {
   if (!latestReport) return;
   await navigator.clipboard.writeText(JSON.stringify(latestReport, null, 2));
@@ -175,4 +206,5 @@ elements.copyReport.addEventListener("click", async () => {
 });
 
 loadSample();
+validateTarget();
 checkHealth();

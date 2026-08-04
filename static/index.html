@@ -44,8 +44,9 @@
           <button type="button" id="loadSample" class="ghost-button">载入靶机样例</button>
         </div>
 
-        <label for="targetIp">目标 IP</label>
-        <input id="targetIp" name="targetIp" value="192.168.3.73" required inputmode="decimal" autocomplete="off">
+        <label for="targetInput">目标 IP / 域名 / URL</label>
+        <input id="targetInput" name="target" value="192.168.3.73" required autocomplete="off" spellcheck="false" placeholder="例如 192.168.3.73 或 https://freemodel.dev/dashboard/usage">
+        <p id="targetHint" class="field-hint">支持 IPv4、域名和 http(s) URL；仅解析 DNS，不执行真实网络扫描。</p>
 
         <label for="alertJson">告警 JSON</label>
         <textarea id="alertJson" name="alertJson" rows="10" spellcheck="false"></textarea>
@@ -72,11 +73,12 @@
         </div>
         <ol id="workflow" class="workflow-list">
           <li data-stage="ingest"><span class="step-index">01</span><div><strong>事件接入</strong><small>规范化告警与日志</small></div><span class="step-state">等待</span></li>
-          <li data-stage="analysis"><span class="step-index">02</span><div><strong>日志分析 Agent</strong><small>识别 Web 攻击特征</small></div><span class="step-state">等待</span></li>
-          <li data-stage="triage"><span class="step-index">03</span><div><strong>SOC 分诊 Agent</strong><small>提取 IOC 与处置建议</small></div><span class="step-state">等待</span></li>
-          <li data-stage="investigation"><span class="step-index">04</span><div><strong>调查工具 Agent</strong><small>IP 富化与载荷解码</small></div><span class="step-state">等待</span></li>
-          <li data-stage="assessment"><span class="step-index">05</span><div><strong>资产评估 Agent</strong><small>安全模拟扫描与 CVE 关联</small></div><span class="step-state">等待</span></li>
-          <li data-stage="report"><span class="step-index">06</span><div><strong>Manager Agent</strong><small>汇总风险与最终报告</small></div><span class="step-state">等待</span></li>
+          <li data-stage="target"><span class="step-index">02</span><div><strong>目标解析 Agent</strong><small>识别类型并解析 DNS</small></div><span class="step-state">等待</span></li>
+          <li data-stage="analysis"><span class="step-index">03</span><div><strong>日志分析 Agent</strong><small>识别 Web 攻击特征</small></div><span class="step-state">等待</span></li>
+          <li data-stage="triage"><span class="step-index">04</span><div><strong>SOC 分诊 Agent</strong><small>提取 IOC 与处置建议</small></div><span class="step-state">等待</span></li>
+          <li data-stage="investigation"><span class="step-index">05</span><div><strong>调查工具 Agent</strong><small>IP 富化与载荷解码</small></div><span class="step-state">等待</span></li>
+          <li data-stage="assessment"><span class="step-index">06</span><div><strong>资产评估 Agent</strong><small>安全模拟扫描与 CVE 关联</small></div><span class="step-state">等待</span></li>
+          <li data-stage="report"><span class="step-index">07</span><div><strong>Manager Agent</strong><small>汇总风险与最终报告</small></div><span class="step-state">等待</span></li>
         </ol>
       </section>
     </section>

@@ -9,6 +9,7 @@ from typing import Any, Callable
 from .investigation import investigate_iocs
 from .log_analyzer import analyze_web_log
 from .scanner import scan_lab_target, search_vulnerabilities
+from .targets import normalize_target, resolve_target
 from .triage import triage_alert
 
 
@@ -24,6 +25,8 @@ class SecurityWorkflow:
         allow_external_lookup: bool = False,
         use_llm: bool = True,
         on_event: EventCallback | None = None,
+        target: str = "",
+        perform_dns: bool = True,
     ) -> dict[str, Any]:
         workflow_id = f"WF-{uuid.uuid4().hex[:8].upper()}"
         events: list[dict[str, Any]] = []
@@ -41,7 +44,10 @@ class SecurityWorkflow:
             if on_event:
                 on_event(event)
 
-        emit("ingest", "告警与日志已进入流水线")
+        target_input = target or target_ip or str(alert.get("target") or alert.get("source_ip") or "")
+        target_context = resolve_target(normalize_target(target_input), perform_dns=perform_dns)
+        emit("ingest", "告警与日志已进入流水线", {"alert_id": alert.get("alert_id")})
+        emit("target", "目标类型识别与 DNS 解析完成", target_context)
         log_result = analyze_web_log(log_line, use_llm=use_llm) if log_line else None
         emit("analysis", "Web 日志分析完成", log_result)
 
@@ -54,8 +60,7 @@ class SecurityWorkflow:
         investigation = investigate_iocs(iocs, str(alert.get("payload") or ""), allow_external_lookup)
         emit("investigation", "IOC 与载荷调查完成", investigation)
 
-        scan_target = target_ip or next((ip for ip in iocs if ip.startswith(("10.", "172.", "192.168."))), "")
-        scan_result = scan_lab_target(scan_target) if scan_target else None
+        scan_result = scan_lab_target(target_context["hostname"], target_context.get("resolved_ips", []))
         vulnerabilities = search_vulnerabilities(scan_result) if scan_result else []
         emit("assessment", "靶机资产与漏洞关联完成", {"scan": scan_result, "vulnerabilities": vulnerabilities})
 
@@ -67,6 +72,7 @@ class SecurityWorkflow:
             "severity": self._score_to_severity(risk),
             "recommended_action": triage_result.get("action", "Escalate to L2"),
             "summary": self._summary(log_result, triage_result, vulnerabilities),
+            "target": target_context,
             "log_analysis": log_result,
             "triage": triage_result,
             "investigation": investigation,
