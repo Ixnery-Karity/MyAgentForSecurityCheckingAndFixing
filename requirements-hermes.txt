@@ -1,0 +1,2 @@
+# Optional dependency used only by integrations/hermes_mcp.py.
+mcp>=1.28,<2.0

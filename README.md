@@ -56,3 +56,10 @@ python -m unittest discover -s tests -v
 ## 安全边界
 
 仅在你拥有明确授权的系统和内网靶场中使用。默认扫描器为安全模拟模式；公网 IP 地理查询也需要在页面中显式启用。
+
+## Hermes on Kali
+
+Kali + Hermes 的接入说明、stdio MCP 配置和 skill 兜底方式见
+[`docs/HERMES_KALI.md`](docs/HERMES_KALI.md)。MCP 适配器位于
+[`integrations/hermes_mcp.py`](integrations/hermes_mcp.py)，需要额外安装
+`requirements-hermes.txt`。
