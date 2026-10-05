@@ -1,5 +1,14 @@
 # SentinelFlow Security Agent
 
+> ⚠️ **本仓库为早期版本（v1：7 阶段流水线 + Hermes MCP 集成），已停止维护。**
+>
+> 后续升级版重构为「8 大能力引擎 + 10 节点工作流」，并新增
+> **CTF 解题 Agent、本地知识库与自主学习闭环、三级降级真实执行层**，
+> 配套 67 项单元测试与 GitHub Actions CI：
+> **[SentinelFlow-Console](https://github.com/Ixnery-Karity/SentinelFlow-Console)** ← 请以新版为准。
+>
+> 保留本仓库用于记录迭代过程（v1 → v2 的取舍与收敛）。
+
 一个面向已授权内网靶场的安全检查 Agent。项目将原有八个代码入口整合为完整工作流，并提供可视化 Web 控制台。目标输入同时支持 IPv4、域名和完整 `http(s)` URL，例如 `https://freemodel.dev/dashboard/usage`。
 
 ## 工作流
